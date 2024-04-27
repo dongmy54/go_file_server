@@ -36,21 +36,7 @@ func main() {
 		}
 	})
 
-	// 确定计算机的局域网IP地址
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		log.Fatal(err)
-	}
-	var ip string
-	for _, address := range addrs {
-		// 检查IP地址确保不是回环地址
-		if inet, ok := address.(*net.IPNet); ok && !inet.IP.IsLoopback() {
-			if inet.IP.To4() != nil {
-				ip = inet.IP.String()
-				break
-			}
-		}
-	}
+	ip := getLocalIP()
 
 	// 启动HTTP服务器
 	addr := fmt.Sprintf("%s:%s", ip, port)
@@ -61,4 +47,25 @@ func main() {
 	fmt.Printf("要下载文件，请访问：%s<文件名>\n", serverUrl)
 
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+// 获取本机有效IP地址
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ip string
+	for _, address := range addrs {
+		if inet, ok := address.(*net.IPNet); ok && !inet.IP.IsLoopback() {
+			if inet.IP.To4() != nil {
+				ip = inet.IP.String()
+				break
+			}
+		}
+	}
+	if ip == "" {
+		log.Fatal("无法获取本地IP地址")
+	}
+	return ip
 }
